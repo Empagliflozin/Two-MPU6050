@@ -58,8 +58,8 @@ THE SOFTWARE.
 // specific I2C addresses may be passed as a parameter here
 // AD0 low = 0x68 (default for SparkFun breakout and InvenSense evaluation board)
 // AD0 high = 0x69
-//MPU6050 mpu(0x69);
-MPU6050 mpu2(0x68); // <-- use for AD0 high
+MPU6050 mpu(0x68);
+//MPU6050 mpu2(0x69); // <-- use for AD0 high
 
 /* =========================================================================
    NOTE: In addition to connection 3.3v, GND, SDA, and SCL, this sketch
@@ -174,6 +174,11 @@ void dmpDataReady() {
     mpuInterrupt = true;
 }
 
+volatile bool mpuInterrupt2 = false;
+void dmpDataReady2() {
+    mpuInterrupt2 = true;
+}
+
 
 
 // ================================================================
@@ -206,13 +211,20 @@ void setup() {
   #ifdef mpu
     mpu.initialize();
   #endif
+  
+  #ifdef mpu2
     mpu2.initialize(); // (0x69)
     pinMode(INTERRUPT_PIN, INPUT);
+  #endif
 
     // verify connection
     Serial.println(F("Testing device connections..."));
   #ifdef mpu
-    Serial.println(mpu.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
+    Serial.println(mpu.testConnection() ? F("MPU6050_1 connection successful") : F("MPU6050_1 connection failed"));
+  #endif
+
+  #ifdef mpu2 
+    Serial.println(mpu2.testConnection() ? F("MPU6050_2 connection successful") : F("MPU6050_2 connection failed"));
   #endif
   
     // wait for ready
@@ -226,7 +238,10 @@ void setup() {
    #ifdef mpu
      devStatus = mpu.dmpInitialize();
    #endif
-    devStatus2 = mpu2.dmpInitialize(); // (0x69)
+
+   #ifdef mpu2
+     devStatus2 = mpu2.dmpInitialize(); // (0x69)
+   #endif mpu2
 
     // supply your own gyro offsets here, scaled for min sensitivity
    #ifdef mpu
@@ -245,23 +260,40 @@ void setup() {
       #ifdef mpu
         mpu.setDMPEnabled(true);
       #endif
+
+      #ifdef mpu2
         mpu2.setDMPEnabled(true); // (0x69)
+      #endif
 
         // enable Arduino interrupt detection
         Serial.println(F("Enabling interrupt detection (Arduino external interrupt 0)..."));
         attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), dmpDataReady, RISING);
+        attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), dmpDataReady2, RISING);
       #ifdef mpu
         mpuIntStatus = mpu.getIntStatus();
       #endif
+     
+      #ifdef mpu2
         mpuIntStatus2 = mpu2.getIntStatus(); // (0x69)
+      #endif
 
         // set our DMP Ready flag so the main loop() function knows it's okay to use it
         Serial.println(F("DMP ready! Waiting for first interrupt..."));
+      #ifdef mpu
         dmpReady = true;
+      #endif
+
+      #ifdef mpu2
+        dmpReady2 = true;
+      #endif
 
         // get expected DMP packet size for later comparison
       #ifdef mpu
         packetSize = mpu.dmpGetFIFOPacketSize();
+      #endif
+
+      #ifdef mpu2
+        packetSize2 = mpu2.dmgGetFIFOPacketSize();
       #endif
       
     } else {
@@ -287,6 +319,7 @@ void setup() {
 
 void loop() {
     // if programming failed, don't try to do anything
+
     if (!dmpReady) return;
 
     // wait for MPU interrupt or extra packet(s) available
@@ -305,6 +338,7 @@ void loop() {
 
     // reset interrupt flag and get INT_STATUS byte
     mpuInterrupt = false;
+    mpuInterrupt2 = false;
     
     #ifdef mpu
       mpuIntStatus = mpu.getIntStatus();
@@ -329,8 +363,16 @@ void loop() {
         // reset so we can continue cleanly
         mpu.resetFIFO();
         Serial.println(F("FIFO overflow!"));
-  #endif
     }
+  #endif
+
+  #ifdef mpu2
+    if((mpuIntStatus2 & 0x10) || fifoCount == 1024) {
+      // reset so we can continue cleanly
+      mpu2.resetFIFO();
+      Serial.println(F("FIFO 2 overflow!"))
+    }
+  #endif
 
   #ifdef mpu
       else if (mpuIntStatus & 0x02) {
@@ -448,7 +490,7 @@ void loop() {
     }
   #endif
   
-   #ifdef mpu2
+  #ifdef mpu2
       else if (mpuIntStatus2 & 0x02) {
         // wait for correct available data length, should be a VERY short wait
         while (fifoCount2 < packetSize2) fifoCount2 = mpu2.getFIFOCount();
@@ -549,4 +591,5 @@ void loop() {
         digitalWrite(LED_PIN, blinkState);
     }
   #endif
+  
 }
