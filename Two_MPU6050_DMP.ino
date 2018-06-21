@@ -194,6 +194,7 @@ void setup() {
 
     // initialize device
     Serial.println(F("Initializing I2C devices..."));
+
     #ifdef Sensor1
       mpu.initialize();
       pinMode(INTERRUPT_PIN1, INPUT);
@@ -202,10 +203,12 @@ void setup() {
     #ifdef Sensor2
       mpu2.initialize(); // (0x69)
       pinMode(INTERRUPT_PIN2, INPUT);
+
     #endif
 
       // verify connection
       Serial.println(F("Testing device connections..."));
+
     #ifdef Sensor1
       Serial.println(mpu.testConnection() ? F("MPU6050_1 connection successful") : F("MPU6050_1 connection failed"));
     #endif
@@ -214,6 +217,7 @@ void setup() {
       Serial.println(mpu2.testConnection() ? F("MPU6050_2 connection successful") : F("MPU6050_2 connection failed"));
     #endif
     
+
     // wait for ready
     // Serial.println(F("\nSend any character to begin DMP programming and demo: "));
     // while (Serial.available() && Serial.read()); // empty buffer
@@ -222,6 +226,7 @@ void setup() {
 
     // load and configure the DMP
     Serial.println(F("Initializing DMP..."));
+
     #ifdef Sensor1
       devStatus = mpu.dmpInitialize();
     #endif
@@ -232,6 +237,7 @@ void setup() {
 
     // supply your own gyro offsets here, scaled for min sensitivity
     #ifdef Sensor1
+
       mpu.setXGyroOffset(118);
       mpu.setYGyroOffset(-11);
       mpu.setZGyroOffset(56);
