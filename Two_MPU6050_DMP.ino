@@ -208,24 +208,24 @@ void setup() {
 
     // initialize device
     Serial.println(F("Initializing I2C devices..."));
-  #ifdef mpu
-    mpu.initialize();
-  #endif
+    #ifdef mpu
+      mpu.initialize();
+    #endif
   
-  #ifdef mpu2
-    mpu2.initialize(); // (0x69)
-    pinMode(INTERRUPT_PIN, INPUT);
-  #endif
+    #ifdef mpu2
+      mpu2.initialize(); // (0x69)
+      pinMode(INTERRUPT_PIN, INPUT);
+    #endif
 
-    // verify connection
-    Serial.println(F("Testing device connections..."));
-  #ifdef mpu
-    Serial.println(mpu.testConnection() ? F("MPU6050_1 connection successful") : F("MPU6050_1 connection failed"));
-  #endif
+      // verify connection
+      Serial.println(F("Testing device connections..."));
+    #ifdef mpu
+      Serial.println(mpu.testConnection() ? F("MPU6050_1 connection successful") : F("MPU6050_1 connection failed"));
+    #endif
 
-  #ifdef mpu2 
-    Serial.println(mpu2.testConnection() ? F("MPU6050_2 connection successful") : F("MPU6050_2 connection failed"));
-  #endif
+    #ifdef mpu2 
+      Serial.println(mpu2.testConnection() ? F("MPU6050_2 connection successful") : F("MPU6050_2 connection failed"));
+    #endif
   
     // wait for ready
     // Serial.println(F("\nSend any character to begin DMP programming and demo: "));
@@ -235,26 +235,26 @@ void setup() {
 
     // load and configure the DMP
     Serial.println(F("Initializing DMP..."));
-   #ifdef mpu
-     devStatus = mpu.dmpInitialize();
-   #endif
+    #ifdef mpu
+      devStatus = mpu.dmpInitialize();
+    #endif
 
-   #ifdef mpu2
-     devStatus2 = mpu2.dmpInitialize(); // (0x69)
-   #endif mpu2
+    #ifdef mpu2
+      devStatus2 = mpu2.dmpInitialize(); // (0x69)
+    #endif mpu2
 
     // supply your own gyro offsets here, scaled for min sensitivity
-   #ifdef mpu
-    mpu.setXGyroOffset(118);
-    mpu.setYGyroOffset(-11);
-    mpu.setZGyroOffset(56);
-    mpu.setZAccelOffset(8888);
-    mpu.setXAccelOffset(-6849);
-    mpu.setYAccelOffset(5226);
-   #endif
+    #ifdef mpu
+      mpu.setXGyroOffset(118);
+      mpu.setYGyroOffset(-11);
+      mpu.setZGyroOffset(56);
+      mpu.setZAccelOffset(8888);
+      mpu.setXAccelOffset(-6849);
+      mpu.setYAccelOffset(5226);
+    #endif
 
     // make sure it worked (returns 0 if so)
-   if (devStatus == 0) {
+    if (devStatus == 0) {
         // turn on the DMP, now that it's ready
       Serial.println(F("Enabling DMP..."));
       #ifdef mpu
