@@ -24,6 +24,15 @@ THE SOFTWARE.
 ===============================================
 */
 
+/*
+  ========================================
+  ===            IMPORTANT             ===
+  ========================================
+ *** MAKE SURE THAT THE ADDRESSS OF THE TWO MPU 6050 SENSORS ARE DIFFERENT
+ *** EACH SENSOR MUST HAVE ITS OWN INTERRUPT PIN
+
+*/
+
 // I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
 // for both classes must be in the include path of your project
 #include "I2Cdev.h"
@@ -110,16 +119,16 @@ MPU6050 mpu2(0x69); // <-- use for AD0 high
 
 
 
-#define INTERRUPT_PIN1 2  // connect pin 2 on the Arduino UNO to the first sensor
-#define INTERRUPT_PIN2 3  // connect pin 3 on the Arduino UNO to the second sensor
+//#define INTERRUPT_PIN1 2  // use pin 2 on Arduino Uno & most boards
+//#define INTERRUPT_PIN2 3
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 bool blinkState = false;
 
 // MPU control/status vars
 bool dmpReady = false;  // set true if DMP init was successful
 bool dmpReady2 = false; // (0x69)
-uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU-6050 (0x68)
-uint8_t mpuIntStatus2;  // (0x69)
+//uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU-6050 (0x68)
+//uint8_t mpuIntStatus2;  // (0x69)
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
 uint8_t devStatus2;     // (0x69)
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
@@ -154,17 +163,19 @@ uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\
 // ================================================================
 // ===               INTERRUPT DETECTION ROUTINE                ===
 // ================================================================
-
+/*
 volatile bool mpuInterrupt = false;     // indicates whether MPU interrupt pin has gone high
 void dmpDataReady() {
-    mpuInterrupt = true;
+    //mpuInterrupt = true;
 }
+*/
 
+/*
 volatile bool mpuInterrupt2 = false;
 void dmpDataReady2() {
-    mpuInterrupt2 = true;
+    //mpuInterrupt2 = true;
 }
-
+*/
 
 
 // ================================================================
@@ -194,21 +205,18 @@ void setup() {
 
     // initialize device
     Serial.println(F("Initializing I2C devices..."));
-
-    #ifdef Sensor1
+    /* #ifdef Sensor1
       mpu.initialize();
       pinMode(INTERRUPT_PIN1, INPUT);
-    #endif
+    #endif */
   
-    #ifdef Sensor2
+    /* #ifdef Sensor2
       mpu2.initialize(); // (0x69)
       pinMode(INTERRUPT_PIN2, INPUT);
-
-    #endif
+    #endif */
 
       // verify connection
       Serial.println(F("Testing device connections..."));
-
     #ifdef Sensor1
       Serial.println(mpu.testConnection() ? F("MPU6050_1 connection successful") : F("MPU6050_1 connection failed"));
     #endif
@@ -217,7 +225,6 @@ void setup() {
       Serial.println(mpu2.testConnection() ? F("MPU6050_2 connection successful") : F("MPU6050_2 connection failed"));
     #endif
     
-
     // wait for ready
     // Serial.println(F("\nSend any character to begin DMP programming and demo: "));
     // while (Serial.available() && Serial.read()); // empty buffer
@@ -226,7 +233,6 @@ void setup() {
 
     // load and configure the DMP
     Serial.println(F("Initializing DMP..."));
-
     #ifdef Sensor1
       devStatus = mpu.dmpInitialize();
     #endif
@@ -237,7 +243,6 @@ void setup() {
 
     // supply your own gyro offsets here, scaled for min sensitivity
     #ifdef Sensor1
-
       mpu.setXGyroOffset(118);
       mpu.setYGyroOffset(-11);
       mpu.setZGyroOffset(56);
@@ -259,16 +264,16 @@ void setup() {
       #endif
 
         // enable Arduino interrupt detection
-        Serial.println(F("Enabling interrupt detection (Arduino external interrupt 0)..."));
-        attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN1), dmpDataReady, RISING);
-        attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN2), dmpDataReady2, RISING);
-      #ifdef Sensor1
+        //Serial.println(F("Enabling interrupt detection (Arduino external interrupt 0)..."));
+        //attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN1), dmpDataReady, RISING);
+        //attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN2), dmpDataReady2, RISING);
+      /* #ifdef Sensor1
         mpuIntStatus = mpu.getIntStatus();
-      #endif
+      #endif */
      
-      #ifdef Sensor2
+     /* #ifdef Sensor2
         mpuIntStatus2 = mpu2.getIntStatus(); // (0x69)
-      #endif
+      #endif */
 
         // set our DMP Ready flag so the main loop() function knows it's okay to use it
         //Serial.println(F("DMP ready! Waiting for first interrupt..."));
@@ -316,7 +321,7 @@ void loop() {
     if (!dmpReady || !dmpReady2) return;
 
     // wait for MPU interrupt or extra packet(s) available
-    while (!mpuInterrupt && fifoCount < packetSize) {
+    /*while (!mpuInterrupt && fifoCount < packetSize) {
         // other program behavior stuff here
         // .
         // .
@@ -328,19 +333,20 @@ void loop() {
         // .
         // .
     }
-
+  */
     // reset interrupt flag and get INT_STATUS byte
-    mpuInterrupt = false;
-    mpuInterrupt2 = false;
+    //mpuInterrupt = false;
+    //mpuInterrupt2 = false;
     
-    #ifdef Sensor1
+    /*#ifdef Sensor1
       mpuIntStatus = mpu.getIntStatus();
     #endif
-    
+    */
+    /*
     #ifdef Sensor2
       mpuIntStatus2 = mpu2.getIntStatus(); // (0x69)
     #endif
-
+    */
     // get current FIFO count
     #ifdef Sensor1
       fifoCount = mpu.getFIFOCount();
@@ -351,25 +357,25 @@ void loop() {
     #endif
 
     // check for overflow (this should never happen unless our code is too inefficient)
-  #ifdef Sensor1
-    if ((mpuIntStatus & 0x10) || fifoCount == 1024) {
+  //#ifdef Sensor1
+    /*if ((mpuIntStatus & 0x10) || fifoCount == 1024) {
         // reset so we can continue cleanly
         mpu.resetFIFO();
         Serial.println(F("FIFO overflow!"));
-    }
-  #endif
+    */
+    
+  //#endif
 
-  #ifdef Sensor2
+  /*#ifdef Sensor2
     if((mpuIntStatus2 & 0x10) || fifoCount == 1024) {
       // reset so we can continue cleanly
       mpu2.resetFIFO();
       Serial.println(F("FIFO 2 overflow!"));
     }
   #endif
-
+  */
   #ifdef Sensor1
-      else if (mpuIntStatus & 0x02) {
-        // wait for correct available data length, should be a VERY short wait
+     if (1 == 1) {
         while (fifoCount < packetSize) fifoCount = mpu.getFIFOCount();
 
         // read a packet from FIFO
@@ -474,7 +480,7 @@ void loop() {
   
   #endif
 
-  #ifdef Sensor2
+  /*#ifdef Sensor2
     if((mpuIntStatus2 & 0x10) || fifoCount2 == 1024) {
         // reset so we can continue cleanly
         mpu2.resetFIFO();
@@ -482,9 +488,9 @@ void loop() {
      // otherwise, check for DMP data ready interrupt (this should happen frequently)
     }
   #endif
-  
+  */
   #ifdef Sensor2
-      else if (mpuIntStatus2 & 0x02) {
+      if (1 == 1) {
         // wait for correct available data length, should be a VERY short wait
         while (fifoCount2 < packetSize2) fifoCount2 = mpu2.getFIFOCount();
 
@@ -564,7 +570,7 @@ void loop() {
             Serial.println(aaWorld2.z);
         #endif
 
-      /*
+      
         #ifdef OUTPUT_TEAPOT_2
             // display quaternion values in InvenSense Teapot demo format:
             teapotPacket[2] = fifoBuffer2[0];
@@ -578,7 +584,7 @@ void loop() {
             Serial.write(teapotPacket, 14);
             teapotPacket[11]++; // packetCount, loops at 0xFF on purpose
         #endif
-      */
+      
         // blink LED to indicate activity
         blinkState = !blinkState;
         digitalWrite(LED_PIN, blinkState);
